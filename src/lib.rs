@@ -4,6 +4,9 @@ use prometheus_parse::{HistogramCount, Sample, Value};
 use reqwest::{IntoUrl, Url};
 use std::collections::HashMap;
 
+mod config_file;
+pub use config_file::parse_config;
+
 /// Describes when to set health bits on Prometheus metrics
 #[derive(Debug, Clone, PartialEq)]
 pub enum Filter {
@@ -115,14 +118,31 @@ impl Bound {
     }
 }
 
+/// An agent responsible for monitoring a single Prometheus endpoint and returning anomalous
+/// metrics reports according to the specified filters.
 pub struct ElementHealth {
     /// the prometheus-exporting endpoint to query
     url: Url,
     client: reqwest::Client,
-    /// the Filters
+    /// the Filters to check
+    // TODO HashMap won't work if Filters can be globs or regexes, unless we do some pre-processing.
     filter_set: HashMap<String, Vec<Bound>>,
     /// metric_name -> last observed Sample
     relative_state: HashMap<String, Sample>,
+}
+
+impl TryFrom<config_file::Element> for ElementHealth {
+    type Error = Report;
+    fn try_from(value: config_file::Element) -> Result<Self, Self::Error> {
+        Self::new(
+            value.url,
+            value
+                .bounds
+                .into_iter()
+                .map(|b| b.try_into())
+                .collect::<Result<Vec<Filter>, _>>()?,
+        )
+    }
 }
 
 impl ElementHealth {

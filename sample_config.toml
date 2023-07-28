@@ -1,0 +1,21 @@
+[[elements]]
+url = "http://localhost:9419/metrics"
+
+[[elements.bounds]]
+# health bit set when a message is dropped (upper bound)
+metric_name = "rabbitmq_global_messages_unroutable_dropped_total"
+bound_type = "abs_upper"
+limit = 1
+
+[[elements.bounds]]
+# health bit set when there are no queues (lower bound)
+metric_name = "rabbitmq_queues"
+bound_type = "abs_lower"
+limit = 1
+
+[[elements.bounds]]
+# health bit set when rabbitmq's total memory allocated increases by 1MB within a minute
+metric_name = "erlang_vm_memory_processes_bytes_total"
+bound_type = "rate_upper"
+limit = 1000000
+period = "1m"

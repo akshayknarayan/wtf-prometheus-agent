@@ -1,5 +1,14 @@
-use color_eyre::eyre::Report;
-use wtf_prometheus_agent::{Bound, ElementHealth, Filter};
+use color_eyre::eyre::{eyre, Context, Report};
+use wtf_prometheus_agent::ElementHealth;
+
+fn get_config_file_arg() -> Option<String> {
+    let mut args = std::env::args().take(3).skip(1);
+    let flag = args.next()?;
+    if flag != "-c" {
+        return None;
+    }
+    args.next()
+}
 
 fn main() -> Result<(), Report> {
     color_eyre::install()?;
@@ -7,16 +16,21 @@ fn main() -> Result<(), Report> {
         .enable_all()
         .build()
         .unwrap();
+
+    let cfg_file =
+        get_config_file_arg().ok_or_else(|| eyre!("Usage: fetch_one -c <config_file.toml>"))?;
+    let cfg_elements = wtf_prometheus_agent::parse_config(cfg_file)?;
+    let mut elements: Vec<ElementHealth> = cfg_elements
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect::<Result<_, _>>()
+        .wrap_err("Could not create ElementHealth checkers from config file")?;
+
     rt.block_on(async move {
-        let mut el = ElementHealth::new(
-            "http://localhost:9419/metrics",
-            [Filter::Exact {
-                metric_name: "rabbitmq_global_messages_unroutable_dropped_total".to_string(),
-                trigger: Bound::AbsUpper(1.),
-            }],
-        )?;
-        let triggered_samples = el.check().await?;
-        dbg!(triggered_samples);
+        for el in &mut elements {
+            let triggered_samples = el.check().await?;
+            dbg!(triggered_samples);
+        }
         Ok::<_, Report>(())
     })?;
     Ok(())
