@@ -1,0 +1,9 @@
+metrics:
+  enabled: true
+  plugins: "rabbitmq_prometheus"
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: '/metrics'
+  serviceMonitor:
+    enabled: true
+    path: '/metrics'

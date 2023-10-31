@@ -19,8 +19,9 @@ fn main() -> Result<(), Report> {
 
     let cfg_file =
         get_config_file_arg().ok_or_else(|| eyre!("Usage: fetch_one -c <config_file.toml>"))?;
-    let cfg_elements = wtf_prometheus_agent::parse_config(cfg_file)?;
-    let mut elements: Vec<ElementHealth> = cfg_elements
+    let cfg = wtf_prometheus_agent::parse_config(cfg_file)?;
+    let mut elements: Vec<ElementHealth> = cfg
+        .elements
         .into_iter()
         .map(|e| e.try_into())
         .collect::<Result<_, _>>()
