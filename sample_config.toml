@@ -1,12 +1,12 @@
 [prometheus]
-url = "http://localhost:9090"
+url = "http://localhost:9090/api/v1/alerts"
 
 [[prometheus.alerts]]
 name = "RabbitmqTooManyUnackMessages"
 
 [[prometheus.alerts]]
 name = "KubeStatefulSetReplicasMismatch"
-labels = [{"statefulset": "rabbitmq"}]
+labels = { statefulset = "rabbitmq" }
 
 [[elements]]
 url = "http://localhost:9419/metrics"

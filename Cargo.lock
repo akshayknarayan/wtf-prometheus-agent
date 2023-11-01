@@ -1501,6 +1501,7 @@ dependencies = [
  "prometheus-parse",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
  "toml",
  "tracing",
